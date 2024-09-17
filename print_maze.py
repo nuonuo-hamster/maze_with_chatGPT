@@ -1,4 +1,5 @@
 import cv2
+import json
 import numpy as np
 import extractJson
 import find_maze_path
@@ -7,21 +8,39 @@ maze_file = './maze_info.json'
 route_file = './route_info.json'
 blocks_list = []
 
-def route_printer(block, row, col, enter, exist, fpath_finder):
+with open('route_info.json', 'r') as f:
+    route_data = json.load(f)
 
-    maze = find_maze_path.load_maze(maze_file)
+def route_printer(block, row, col, order_list):
 
-    start = (int(enter.split('_')[0]), int(enter.split('_')[1]))
-    end = (int(exist.split('_')[0]), int(exist.split('_')[1]))
+    route_owner = None
+    for order in order_list:
+        route_list = route_data.get(order)
+        if (f"{row:02}_{col:02}") in route_list:
+            route_owner = order.split('_to_')[0]
 
-    path = fpath_finder(maze, start, end)
+    if route_owner is None: return block
     
-    find_maze_path.append_route_to_json(route_file, start, end, path)
-
-    if (row, col) in path:
-        block[:, :, 0] = 0
-        block[:, :, 1] = 0
+    if route_owner == 'yellow':
+        block[:, :, 0] = 180
         block[:, :, 1] = 255
+        block[:, :, 2] = 255
+    if route_owner == "green":
+        block[:, :, 0] = 144
+        block[:, :, 1] = 238
+        block[:, :, 2] = 144
+    if route_owner == "blue":
+        block[:, :, 0] = 230
+        block[:, :, 1] = 230
+        block[:, :, 2] = 250
+    if route_owner == "pink":
+        block[:, :, 0] = 203
+        block[:, :, 1] = 192
+        block[:, :, 2] = 255
+    if route_owner == "purple":
+        block[:, :, 0] = 221
+        block[:, :, 1] = 160
+        block[:, :, 2] = 221
 
     return block
 
@@ -61,7 +80,7 @@ def checkpoint_printer(block, row, col, checkpoints):
 
     return block
 
-def generate_blocks(rows, cols, checkpoints, route=False, enter=None, exist=None, fpath_finder=None):
+def generate_blocks(rows, cols, checkpoints, route=False, order_list=None):
 
     for row in range(1,rows+1):
         for col in range(1,cols+1):
@@ -69,7 +88,7 @@ def generate_blocks(rows, cols, checkpoints, route=False, enter=None, exist=None
             white_image = np.ones((40, 40, 3), dtype=np.uint8) * 255
 
             if route == True:
-                white_image = route_printer(white_image, row, col, enter, exist, fpath_finder)
+                white_image = route_printer(white_image, row, col, order_list)
             
             white_image = checkpoint_printer(white_image, row, col, checkpoints)
 
@@ -126,16 +145,17 @@ def raw_map_printer(checkpoints):
     contact_image = contact_blocks(rows, cols)
     print_img(img = contact_image, save=True)
 
-def route_map_printer(start, end, checkpoints):
+def route_map_printer(checkpoints, order_list):
 
     cols, rows = extractJson.get_maze_length()
 
-    path_finder = find_maze_path.find_best_path
-    # path_finder = find_maze_path.find_longest_path
-
-    generate_blocks(cols, rows, checkpoints, route=True, enter=start, exist=end, fpath_finder=path_finder)
+    generate_blocks(cols, rows, checkpoints, route=True, order_list=order_list)
     contact_image = contact_blocks(rows, cols)
     print_img(img = contact_image)
+
+    # 清空
+    global blocks_list
+    blocks_list = []
 
 if  __name__ ==  '__main__':
 

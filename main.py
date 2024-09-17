@@ -56,14 +56,17 @@ if __name__ in '__main__':
     checkpoints = {'green':(10,10),'purple':(1,1),'yellow':(16,5)
               ,'pink':(3,17),'blue':(20,20)}
     
-    
     #塗checkpoint方塊, 顯示
     # draw_maze_only_checkpoint(checkpoints)
 
     #算距離 1-2 1-3 1-4 1-5 2-3 2-4 2-5 3-4 3-5 4-5
-    find_checkpoints_route(checkpoints)
+    # find_checkpoints_route(checkpoints)
     
-
-    #### print_maze.route_map_printer(start="06_18", end="14_07")
     #問chatGPT 優先級，最短距離，出發點，終點
-    #集合紅區 顯示 重疊淺紅深紅，淺綠淺藍
+    # chatGPT_route_order(route_information, "問題")
+
+    #逐次顯示淺色路徑
+    order_list = ['green_to_purple','purple_to_yellow','yellow_to_pink','pink_to_blue']
+    for i in range(1, len(order_list)+1):
+        print(order_list[0:i])
+        print_maze.route_map_printer(checkpoints, order_list[0:i])
